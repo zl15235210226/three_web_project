@@ -6,33 +6,38 @@ Vue.use(Router)
 
 
 const routes = [
-  {
-    path: "/login",
-    name: "Login",
-    component: Login
-  },
-  {
-    path: "/",
-    component: () => import("../layout"),
-    redirect: "/home",
-    // 子路由
-    children: [
-      {
-        name: "Home",
-        path: "/home",
-        component: () => import("../views/Home")
-      },
-      {
-        name: "Category",
-        path: "/category",
-        component: () => import("../views/Category")
-      },
-    ]
-  }
+    {
+        path: "/login",
+        name: "Login",
+        component: Login
+    },
+    {
+        path: "/",
+        component: () => import("../layout"),
+        redirect: "/home",
+        // 子路由
+        children: [
+            {
+                name: "Home",
+                path: "/home",
+                component: () => import("../views/Home")
+            },
+            {
+                name: "Category",
+                path: "/category",
+                component: () => import("../views/Category")
+            },
+            {
+                name: "User",
+                path: "/user",
+                component: () => import("../views/User")
+            },
+        ]
+    }
 ]
 
 const router = new Router({
-  routes
+    routes
 })
 
 export default router
