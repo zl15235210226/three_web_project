@@ -1,44 +1,25 @@
 <template>
   <div>
-    <!--触发添加的弹出框-->
-    <el-button type="primary" @click="centerDialogVisible = true">添加类别</el-button>
-    <template>
-      <el-table
-        :data="data"
-        border
-        style="width: 100%">
-
-        <el-table-column
-          prop="id"
-          label="编号"
-          align="center"
-          width="180">
-        </el-table-column>
-        <el-table-column
-          prop="name"
-          label="姓名"
-          align="center"
-          width="180">
-        </el-table-column>
-        <el-table-column
-          prop="address"
-          align="center"
-          @click="delCategory"
-          label="删除">
-          <el-button type="text" size="mini">删除</el-button>
-        </el-table-column>
-        <el-table-column
-          prop="address"
-          align="center"
-          label="修改类型">
-          <el-button type="text" size="mini">修改操作</el-button>
-        </el-table-column>
-      </el-table>
-    </template>
-
-
     <el-row style="margin-bottom: 10px;">
+      <!--触发添加的弹出框-->
+      <el-button type="primary" @click="centerDialogVisible = true">添加类别</el-button>
+    </el-row>
 
+    <el-table
+      :data="data"
+      border
+      style="width: 100%">
+      <el-table-column prop="id" label="编号" align="center" width="500%"></el-table-column>
+      <el-table-column prop="name" label="用户名" align="center" width="500%"></el-table-column>
+      <el-table-column fixed="right" label="操作" width="500%">
+        <template slot-scope="scope">
+          <el-button type="text" size="small" @click="delCategory(scope.row)">删除</el-button>
+          <el-button type="text" size="small"  @click="updCategoryfirst(scope.row)">修改</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <el-row>
       <el-col :span="24">
         <!--添加类别框-->
         <el-dialog title="添加类别" :visible.sync="centerDialogVisible" width="30%" center>
@@ -64,22 +45,36 @@
           <!--添加弹出框-->
           <span slot="footer" class="dialog-footer">
                         <el-button @click="clearDialog">取 消</el-button>
-                        <el-button type="primary" @click="add">确 定</el-button>
+                        <el-button type="primary">确 定</el-button>
                     </span>
         </el-dialog>
       </el-col>
-
-
     </el-row>
+
+    <el-row>
+      <el-col :span="24">
+        <el-dialog title="修改类别信息" center width="30%" :visible.sync="userDialogFormVisible">
+          <el-input v-model="row1.name" placeholder="请输入内容"></el-input>
+          <div slot="footer" class="dialog-footer">
+            <el-button @click="userDialogFormVisible = false">取 消</el-button>
+            <el-button type="primary" @click="updCateorySecond">确 定</el-button>
+          </div>
+        </el-dialog>
+      </el-col>
+    </el-row>
+
   </div>
 </template>
+
 <script>
-import {addCategory, categorys} from "../api/category";
+import {addCategory, categorys, deleteCategory, updateCategory} from "../api/category";
 
 export default {
-    name: "Category",
+  name: "Category",
   data() {
     return {
+      formLabelWidth: '120px',
+      userDialogFormVisible: false,
       centerDialogVisible: false,
       centerDialog: false,
       defaultOptions: {label: 'name', value: 'id', checkStrictly: true, leaf: 'children', disable: 'status'},
@@ -89,16 +84,42 @@ export default {
         label: 'name'
       },
       category: {},
+      row1:"",
     }
   }
   ,
-
   methods: {
 
+    //修改回显
+    updCategoryfirst(row){
+      this.row1 =row
+      this.userDialogFormVisible = true;
+    },
+
+    //修改
+    updCateorySecond(){
+      console.log(this.row1)
+      this.userDialogFormVisible = false;
+      updateCategory(this.row1).then(res=>{
+        this.getCategory()
+      }).catch(error=>{
+        console.log(error);
+      })
+    },
+
+    //删除
+    delCategory(row){
+      deleteCategory(row.id).then(res => {
+        this.getCategory()
+      }).catch(error => {
+        console.log(error);
+      })
+
+    },
+    // 获取类别列表
     getCategory() {
       //  请求
       categorys().then(res => {
-        console.log(res.data);
         this.data = res.data
       })
     },
@@ -124,15 +145,6 @@ export default {
       this.centerDialogVisible = false;
       this.centerDialog = false;
     },
-    delCategory(id) {
-      console.log(id);
-      this.$http.get("http://localhost:8989/admin/delete?id"+id).then(res => {
-        if (res.data.success) {
-          alert(res.data.msg + "点击刷新当前数据")
-          this.findAll();
-        }
-      })
-    }
   },
   created() {
     this.getCategory()
@@ -140,7 +152,9 @@ export default {
 }
 </script>
 
+
 <style scoped>
+
 .custom-tree-node {
   flex: 1;
   display: flex;

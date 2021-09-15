@@ -33,3 +33,10 @@ export function deleteCategory(id){
 /**
  * 修改类别
  */
+export function  updateCategory(data){
+  return request({
+    url:`update`,
+    method:"post",
+    data
+  })
+}
