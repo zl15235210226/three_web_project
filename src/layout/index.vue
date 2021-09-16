@@ -14,6 +14,9 @@
             <el-menu-item index="2-2">
               <router-link to="/user">用户管理</router-link>
             </el-menu-item>
+            <el-menu-item index="3-1">
+              <router-link to="/product">课程管理</router-link>
+            </el-menu-item>
           </el-submenu>
         </el-menu>
       </el-aside>

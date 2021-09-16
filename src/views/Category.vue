@@ -162,6 +162,7 @@ export default {
   justify-content: space-between;
   font-size: 18px;
   padding-right: 8px;
+  font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
 }
 
 .demonstration {
@@ -170,12 +171,18 @@ export default {
   align-items: center;
   margin-right: 25px;
 }
-
+/*主表的样式 */
+el-table{
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
+}
 .el-table .warning-row {
   background: oldlace;
+
 }
 
 .el-table .success-row {
   background: #f0f9eb;
+  font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
 }
 </style>

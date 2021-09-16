@@ -122,6 +122,7 @@ export default {
     handleUpdate(row){
       this.userDialogFormVisible = true
       this.row = row
+
     },
     // 发起更新用户的请求
     updateUser(){
@@ -174,5 +175,8 @@ export default {
 <style scoped>
 .el-row {
   margin-bottom: 10px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
 }
+
 </style>
