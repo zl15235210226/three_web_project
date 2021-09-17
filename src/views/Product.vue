@@ -216,7 +216,7 @@ export default {
       // 人员列表数据
       person: {
         limit: 2,
-        page: 0,
+        page: 1,
       },
     }
   },
@@ -234,7 +234,7 @@ export default {
     handleSizeChange(val) {
       this.person.limit = val
       this.getAllCourse()
-      // this.get_user_list()
+       this.get_user_list()
     },
     /**
      * 更新用户触发
