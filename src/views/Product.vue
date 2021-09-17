@@ -35,20 +35,20 @@
             </template>
           </el-table-column>
           <el-table-column prop="price" label="课程价格" width="100"></el-table-column>
-          <el-table-column prop="courseType" label="付费类型" width="100"></el-table-column>
+          <el-table-column prop="courseType" label="付费类型" width="100" :formatter="versionFormatter"></el-table-column>
           <el-table-column prop="level" label="课程等级" width="100"></el-table-column>
-          <el-table-column prop="courseCategoryId" label="课程类别" width="80"></el-table-column>
+          <el-table-column prop="category.name" label="课程类别" width="80"></el-table-column>
           <el-table-column prop="period" label="建议学习周期" width="120"></el-table-column>
-          <el-table-column prop="status" label="课程状态" width="80"></el-table-column>
+          <el-table-column prop="status" label="课程状态" width="80" :formatter="versionFormatter1"></el-table-column>
 
-          <el-table-column prop="teacherId" label="课程讲师"></el-table-column>
+          <el-table-column prop="teacher.name" label="课程讲师"></el-table-column>
           <el-table-column prop="lessons" label="课程总课时"></el-table-column>
           <el-table-column prop="pubLessons" label="已更新课时"></el-table-column>
           <el-table-column prop="students" label="学习人数 "></el-table-column>
-          <el-table-column prop="created_at" label="创建时间"></el-table-column>
+          <el-table-column prop="pubDate" label="创建时间"></el-table-column>
           <el-table-column fixed="right" label="操作" width="100">
             <template slot-scope="scope">
-              <el-button type="text" size="small" @click="handleDetailClick(scope.row.id)">编辑</el-button>
+              <el-button type="text" size="small" @click="handleUpdate(scope.row)">编辑</el-button>
               <el-button @click="handleDelClick(scope.row.id)" type="text" size="small">删除</el-button>
             </template>
           </el-table-column>
@@ -56,17 +56,18 @@
       </el-col>
     </el-row>
     <!-- TODO 分页展示-->
-    <el-row>
-      <el-col :span="12" :offset="12">
-        <el-pagination
-          background
-          layout="prev, pager, next"
-          :page-size="3"
-          :total="total"
-          @current-change="changePage">
-        </el-pagination>
-      </el-col>
-    </el-row>
+    <!-- 分页-->
+    <div class="block">
+      <el-pagination
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :current-page="person.page"
+        :page-sizes="[2,7,10,12]"
+        :page-size = 1
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="totalCount"
+      ></el-pagination>
+    </div>
     <!-- 保存商品信息框 -->
     <el-row>
       <el-col :span="24">
@@ -123,7 +124,7 @@
                            clearable></el-cascader>
             </el-form-item>
             <el-form-item label="课程讲师" :label-width="formLabelWidth">
-              <el-cascader size="small" v-model="product.teacherId" :options="categoriesList"
+              <el-cascader size="small" v-model="product.teacherId" :options="teacherList"
                            :props="{label:'name',value:'id',emitPath:false}" style="width: 300px"
                            clearable></el-cascader>
             </el-form-item>
@@ -155,36 +156,133 @@
           </el-form>
           <div slot="footer" class="dialog-footer">
             <el-button @click="dialogFormVisible=false">取 消</el-button>
-            <el-button type="primary" @c="closeDialog">确 定</el-button>
+            <el-button type="primary" @click="save">确 定</el-button>
           </div>
         </el-dialog>
       </el-col>
     </el-row>
+
+    <!-- 修改用户信息-->
+    <el-row>
+      <el-col :span="24">
+        <el-dialog title="修改用户信息" center width="30%" :visible.sync="userDialogFormVisible">
+
+
+          <el-input size="small" v-model="name" placeholder="学习人数"></el-input>
+
+
+          <div slot="footer" class="dialog-footer">
+            <el-button @click="userDialogFormVisible = false">取 消</el-button>
+            <el-button type="primary" @click="updateProduct">确 定</el-button>
+          </div>
+        </el-dialog>
+      </el-col>
+    </el-row>
+
   </div>
+
 </template>
 
 <script>
-import {products} from "../api/products";
+import {deleteProduct, products, saveProduct, updateProduct} from "../api/products";
 import {categorys} from "../api/category";
 
 export default {
-  name: "Product",  data() {
+  name: "Product",
+  data() {
     return {
       uploadURL: "http://localhost:8989/admin/upload",    // 文件上传所对应的后端的方法路径
       dialogFormVisible: false,
       formLabelWidth: '120px',
       products: [],//商品数据
-      product: {level: '1', courseType: "1"},
+      product: {level: '1', courseType: "1"}, // 商品对象
       level: {status: "1"},
       searchValue: "",
       fileList: [],
       categoriesList: [],//类别列表
+      teacherList: [{id:1,name:"孙老师"}],//类别列表
       total: 0,
       page: 1,
-      rows: 5
+      rows: 5,
+      courseType:"",
+      status:"",
+      userDialogFormVisible:false,
+      row:"",
+      name:"",
+      start:null,
+      users:[],
+      // 分页
+      totalCount: null, //总条数，总共有多少条数据
+      // 人员列表数据
+      person: {
+        limit: 2,
+        page: 0,
+      },
     }
   },
   methods: {
+    /**
+     * 这是第几页
+     * */
+    handleCurrentChange(newPage) {
+      this.person.page = newPage
+      this.getAllCourse()
+    },
+    /**
+     * 这是一夜有几条数据
+     * */
+    handleSizeChange(val) {
+      this.person.limit = val
+      this.getAllCourse()
+      // this.get_user_list()
+    },
+    /**
+     * 更新用户触发
+     * */
+    handleUpdate(row){
+      this.userDialogFormVisible = true
+      console.log(row);
+      this.row = row
+    },
+    /**
+     *
+     * 发起更新用户的请求
+     * */
+    updateProduct(){
+      // 发起请求
+      // this.status  修改后的用户的值
+      this.row.status = this.status
+      updateProduct({id:this.row.id,name:this.name}).then(res=>{
+        this.userDialogFormVisible = false
+        this.get_user_list()
+
+      }).catch(error=>
+        console.log(error))
+    },
+    // 格式化用户状态显示
+    versionFormatter(row, column, cellValue, index) {
+      if (row.courseType === 1) {
+        return "免费"
+      }
+      if (row.courseType === 0) {
+        return "收费"
+      }
+    },
+    versionFormatter1(row, column, cellValue, index) {
+      if (row.status === 1) {
+        return "正在准备"
+      }
+      if (row.status === 0) {
+        return "开课中"
+      }
+    },
+    // 保存课程
+    save() {
+      saveProduct(this.product).then(res => {
+        this.getAllCourse()
+        this.closeDialog(); // 关闭数据框
+      })
+    },
     closeDialog() {//关闭对话框
       this.dialogFormVisible = false;
       this.product = {status: '1'};
@@ -192,8 +290,12 @@ export default {
     },
     // 获取课程列表的方法
     getAllCourse() {
-      products().then(res => {
-        this.products = res.data
+      // 获取用户时需要向后端传递页码
+      let params = {type:this.type,name:this.username,page: this.person.limit,start:this.person.page}
+      products(params).then(res => {
+        this.products = res.data.users
+        this.totalCount = res.data.total
+
       })
     },
     // 获取类别列表
@@ -204,19 +306,33 @@ export default {
     },
     handleRemove() {
     },
-    handleSuccess() {
+    // 文件上传成功时触发
+    handleSuccess(response, file, fileList) {
+      // 将图片全路径地址保存到对象中
+      this.product.courseImg = response
     },
     changePage() {
     },
-    handleDetailClick() {
+    // 修改商品  展示修改框
+    handleDetailClick(course) {
+      console.log(course);
     },
     // 点击文件将上传到服务器
     submitUpload() {
       // 发起上传文件的请求  会携带该el-upload中的文件向uploadURL的路径中发起上传文件的请求
       this.$refs.upload.submit();
     },
-    handleDelClick() {
+    /**
+     * 删除商品
+     * */
+    handleDelClick(id) {
+      deleteProduct(id).then(res=>{
+
+        console.log(res.data)
+        this.getAllCourse()
+      }).catch(error=>console.log(error))
     },
+
   },
   created() {
     this.get_catetory();
@@ -224,7 +340,6 @@ export default {
   }
 }
 </script>
-
 
 <style scoped>
 .el-table__row .warning-row {

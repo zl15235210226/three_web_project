@@ -33,7 +33,7 @@ const routes = [
                 component: () => import("../views/User")
             },
             {
-             name: "product",
+             name: "Product",
              path: "/product",
             component: () => import("../views/Product")
           },
